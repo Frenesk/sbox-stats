@@ -1,0 +1,142 @@
+[
+ {
+  "key": "seed:stats-start",
+  "date_start": "2021-04-06",
+  "type": "platform",
+  "title": "Начало учёта статистики платформы",
+  "description": "Первая запись в истории статистики Facepunch (закрытое тестирование разработчиками).",
+  "source": "public.facepunch.com/sbox/stats/platform/history",
+  "approx": 0
+ },
+ {
+  "key": "seed:dev-preview",
+  "date_start": "2021-07-01",
+  "type": "beta",
+  "title": "Очередь на Developer Preview",
+  "description": "Открыта очередь на доступ к превью для разработчиков (по активности в Мастерской Garry's Mod и Half-Life: Alyx).",
+  "source": "Wikipedia: S&box",
+  "url": "https://en.wikipedia.org/wiki/S%26box",
+  "approx": 1
+ },
+ {
+  "key": "seed:invites",
+  "date_start": "2023-07-20",
+  "type": "beta",
+  "title": "Система инвайтов (закрытая бета)",
+  "description": "Facepunch начала раздавать коды доступа к Developer Preview по пятницам.",
+  "source": "sbox.game/news «Invite System», 20.07.2023",
+  "url": "https://en.wikipedia.org/wiki/S%26box",
+  "approx": 0
+ },
+ {
+  "key": "seed:retool",
+  "date_start": "2023-09-17",
+  "type": "beta",
+  "title": "Переработка движка, инвайты приостановлены",
+  "description": "Система сущностей заменена на систему сцен; новые инвайты приостановлены.",
+  "source": "sbox.game/news «Retooling», 17.09.2023",
+  "url": "https://en.wikipedia.org/wiki/S%26box",
+  "approx": 0
+ },
+ {
+  "key": "seed:public-preview",
+  "date_start": "2024-07-27",
+  "type": "beta",
+  "title": "Открытый публичный превью-доступ",
+  "description": "Система инвайтов убрана: любой может добавить s&box в Steam (одновременно со стартом Game Jam II).",
+  "source": "sbox.game/jam/gamejam2; KitGuru, 01.07.2024",
+  "url": "https://www.kitguru.net/gaming/matthew-wilson/garrys-mod-successor-sbox-finally-opening-up-preview-access/",
+  "approx": 1
+ },
+ {
+  "key": "seed:dev-preview-closed",
+  "date_start": "2026-04-15",
+  "type": "beta",
+  "title": "Developer Preview закрыт",
+  "description": "Бесплатный доступ к превью закрыт за две недели до релиза в Steam.",
+  "source": "sbox.game/news/update-26-04-15",
+  "url": "https://sbox.game/news/update-26-04-15",
+  "approx": 0
+ },
+ {
+  "key": "seed:steam-page",
+  "date_start": "2024-11-11",
+  "type": "steam",
+  "title": "Открыта страница в Steam",
+  "description": "Появилась страница игры в Steam (appid 590830).",
+  "source": "GamingOnLinux, 11.11.2024",
+  "url": "https://www.gamingonlinux.com/2024/11/sbox-the-spiritual-successor-to-garrys-mod-now-has-a-steam-page-up",
+  "approx": 0
+ },
+ {
+  "key": "seed:open-source",
+  "date_start": "2025-11-01",
+  "type": "platform",
+  "title": "Исходный код движка открыт (MIT)",
+  "description": "Код S&Box опубликован под лицензией MIT (код Source 2 остаётся закрытым).",
+  "source": "Wikipedia: S&box",
+  "url": "https://en.wikipedia.org/wiki/S%26box",
+  "approx": 1
+ },
+ {
+  "key": "seed:valve-license",
+  "date_start": "2026-03-25",
+  "type": "platform",
+  "title": "Лицензия Valve на отдельные игры",
+  "description": "Авторы могут выпускать проекты как самостоятельные игры в Steam без роялти.",
+  "source": "GamingOnLinux, 03.2026",
+  "url": "https://gamingonlinux.com/2026/03/facepunch-signed-a-license-with-valve-to-allow-standalone-releases-from-sandbox",
+  "approx": 1
+ },
+ {
+  "key": "seed:date-announced",
+  "date_start": "2026-04-01",
+  "type": "steam",
+  "title": "Объявлена дата релиза",
+  "description": "Facepunch объявила дату выхода в Steam — 28 апреля 2026.",
+  "source": "PC Gamer",
+  "url": "https://www.pcgamer.com/games/garrys-mod-successor-s-and-box-finally-arrives-on-steam-on-april-28",
+  "approx": 0
+ },
+ {
+  "key": "seed:steam-release",
+  "date_start": "2026-04-28",
+  "type": "release",
+  "title": "Релиз в Steam ($20)",
+  "description": "Официальный выход S&Box в Steam, базовая цена $20.",
+  "source": "sbox.game/news/release-26-04-28",
+  "url": "https://sbox.game/news/release-26-04-28",
+  "approx": 0
+ },
+ {
+  "key": "seed:price-drop",
+  "date_start": "2026-09-15",
+  "type": "price",
+  "title": "Снижение цены до $10",
+  "description": "В обновлении 26.09.15 базовая цена снижена с $20 до $10.",
+  "source": "sbox.game/news/update-26-09-15; iXBT Games",
+  "url": "https://sbox.game/news/update-26-09-15",
+  "approx": 0
+ },
+ {
+  "key": "seed:free-weekend",
+  "date_start": "2026-10-02",
+  "date_end": "2026-10-05",
+  "type": "free",
+  "title": "Бесплатные выходные (финал Game Jam III)",
+  "description": "Игра временно бесплатна до 05.10.2026 20:00 МСК в честь финала гейм-джема.",
+  "source": "iXBT Games, 03.10.2026",
+  "url": "https://ixbt.games/en/news/2026/10/03/naslednicu-garrys-mod-sdelali-vremenno-besplatnoi-i-snizili-bazovuiu-cenu-v-steam.html",
+  "approx": 0
+ },
+ {
+  "key": "seed:f2p-announce",
+  "date_start": "2026-10-13",
+  "type": "price",
+  "title": "Анонс перехода на free-to-play",
+  "description": "Гэрри Ньюман объявил о переходе S&Box на бесплатную модель к концу 2026 года.",
+  "source": "sbox.game/news/rethinking; Gaming.net",
+  "url": "https://www.gaming.net/facepunch-to-make-s-and-box-free-to-play-in-shift-to-curated-discovery/",
+  "approx": 0
+ }
+]

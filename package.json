@@ -1,0 +1,13 @@
+{
+  "name": "sbox-stats",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Сборщик публичных метрик S&Box для игрового дашборда",
+  "type": "module",
+  "scripts": {
+    "collect": "node src/collect.mjs --out=out"
+  },
+  "dependencies": {
+    "playwright": "1.48.2"
+  }
+}

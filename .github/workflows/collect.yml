@@ -1,0 +1,78 @@
+name: collect
+
+# Сбор метрик S&Box каждые 10 минут. Результат — ветка `data` (одна коммит-версия, история не растёт),
+# откуда его раздают GitHub Pages, jsDelivr и raw.githubusercontent.com.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+    inputs:
+      only:
+        description: 'Только эти источники (через запятую), пусто = по расписанию'
+        required: false
+      force:
+        description: 'Обновить все источники принудительно'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Прошлые данные (ветка data)
+        run: |
+          mkdir -p out
+          if git ls-remote --exit-code --heads origin data >/dev/null 2>&1; then
+            git fetch --depth 1 origin data
+            git --work-tree=out checkout origin/data -- .
+            git reset -q
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Кэш браузера Playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ hashFiles('package-lock.json') }}
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: Сбор
+        run: |
+          ARGS="--out=out"
+          if [ -n "${{ github.event.inputs.only }}" ]; then ARGS="$ARGS --only=${{ github.event.inputs.only }}"; fi
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then ARGS="$ARGS --force"; fi
+          node src/collect.mjs $ARGS
+
+      - name: Публикация в ветку data
+        run: |
+          cd out
+          git init -q -b data
+          git config user.name "sbox-stats-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -q -m "data $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" data
+
+      - name: Сброс кэша jsDelivr
+        continue-on-error: true
+        run: |
+          for f in manifest.json live.json analytics.json; do
+            curl -s -m 10 "https://purge.jsdelivr.net/gh/${{ github.repository }}@data/$f" >/dev/null || true
+          done
