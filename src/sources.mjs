@@ -124,9 +124,9 @@ export async function events(store, prev, seeds) {
     const d = s => (s ? s.slice(0, 10) : null);
     const winners = (j.Categories || []).map(c => c.Winner).filter(Boolean);
     jamOut.push({ ident: j.Ident, title: j.Title, theme: j.Theme, prize: j.PrizePool, starts: d(j.Starts), deadline: d(j.Deadline), finals: d(j.FinalsStart || j.GrandFinal), results: d(j.Results), entries: j.EntryCount || 0, winners, url: j.Url });
-    if (j.Announced) list.push({ key: `jam:${j.Ident}:announce`, date_start: d(j.Announced), type: 'jam', title: `${j.Title}: анонс`, url: j.Url, auto: 1 });
-    if (j.Starts) list.push({ key: `jam:${j.Ident}:dev`, date_start: d(j.Starts), date_end: d(j.Deadline), type: 'jam', title: `${j.Title}: разработка`, description: `Тема «${j.Theme || '—'}», работ: ${j.EntryCount || 0}, фонд ${j.PrizePool || '—'}`, url: j.Url, auto: 1 });
-    if (j.FinalsStart || j.GrandFinal) list.push({ key: `jam:${j.Ident}:finals`, date_start: d(j.FinalsStart || j.GrandFinal), date_end: d(j.Results || j.GrandFinal), type: 'jam', title: `${j.Title}: финал`, url: j.Url, auto: 1 });
+    if (j.Announced) list.push({ key: `jam:${j.Ident}:announce`, date_start: d(j.Announced), type: 'jam', title: `${j.Title}: анонс`, title_en: `${j.Title}: announced`, url: j.Url, auto: 1 });
+    if (j.Starts) list.push({ key: `jam:${j.Ident}:dev`, date_start: d(j.Starts), date_end: d(j.Deadline), type: 'jam', title: `${j.Title}: разработка`, title_en: `${j.Title}: development`, description: `Тема «${j.Theme || '—'}», работ: ${j.EntryCount || 0}, фонд ${j.PrizePool || '—'}`, description_en: `Theme "${j.Theme || '—'}", ${j.EntryCount || 0} entries, prize pool ${j.PrizePool || '—'}`, url: j.Url, auto: 1 });
+    if (j.FinalsStart || j.GrandFinal) list.push({ key: `jam:${j.Ident}:finals`, date_start: d(j.FinalsStart || j.GrandFinal), date_end: d(j.Results || j.GrandFinal), type: 'jam', title: `${j.Title}: финал`, title_en: `${j.Title}: finals`, url: j.Url, auto: 1 });
   }
   const news = [];
   for (let skip = 0; skip < 2000; skip += 50) {
