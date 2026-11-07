@@ -57,7 +57,23 @@ export async function sboxgame(store, prev, { skinPagesLimit = 60 } = {}) {
     try {
       const pf = await openAndRun(ctx, 'https://sbox.game/metrics/playfund', `document.body.innerText.includes('Top Packages')`, PLAYFUND_SCRIPT);
       const conv = rows => rows.map((r, i) => [i + 1, r.href ? r.href.replace(/^\/|\/$/g, '').replace('/', '.') : null, r.cells[0], money(r.cells[3]), money(r.cells[4])]);
-      out.playfund = { total: pf.total, top30d: table(['rank', 'ident', 'title', 'users', 'usd'], conv(pf.top['30d'] || [])), topAll: table(['rank', 'ident', 'title', 'users', 'usd'], conv(pf.top.All || [])) };
+      const cols = ['rank', 'ident', 'title', 'users', 'usd'];
+      const periods = {};
+      for (const [p, rows] of Object.entries(pf.top || {})) if (rows && rows.length) periods[p] = table(cols, conv(rows));
+      if (!periods.All) throw new Error('пустая таблица Play Fund');
+      // История снимков: по ней игра строит доход в день (скользящее среднее за 7 дней) — сайт не даёт дневных данных по играм.
+      const today = day(Date.now());
+      const history = { ...(prev?.playfund?.history || {}) };
+      const val = (p, ident) => { const t = periods[p]; if (!t) return null; const r = t.rows.find(x => x[1] === ident); return r ? r[4] : null; };
+      const idents = new Set(Object.values(periods).flatMap(t => t.rows.map(r => r[1]).filter(Boolean)));
+      for (const id of idents) {
+        const arr = (history[id] || []).filter(x => x[0] !== today);
+        arr.push([today, val('7d', id), val('30d', id), val('All', id)]);
+        history[id] = arr.slice(-400);
+      }
+      const totalHistory = (prev?.playfund?.totalHistory || []).filter(x => x[0] !== today);
+      if (pf.total != null) totalHistory.push([today, pf.total]);
+      out.playfund = { total: pf.total, periods, top30d: periods['30d'] || prev?.playfund?.top30d, topAll: periods.All, history, totalHistory: totalHistory.slice(-800) };
     } catch (e) { out.errors.push('playfund: ' + e.message); out.playfund = prev?.playfund; }
 
     // 3) Скины: обзор (выручка по дням, рейтинги)

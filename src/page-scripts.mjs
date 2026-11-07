@@ -158,7 +158,7 @@ export const PLAYFUND_SCRIPT = `
   const t = document.body.innerText;
   const m = t.match(/\\$([\\d,.]+)\\s*\\n?\\s*paid to community/);
   const out = { total: m ? __sx.money(m[1]) : null, top: {} };
-  for (const p of ['30d', 'All']) {
+  for (const p of ['7d', '30d', '90d', '1y', 'All']) {
     if (await __sx.clickIn('Top Packages', p)) await __sx.sleep(3000);
     if (await __sx.viewAll('Top Packages')) await __sx.sleep(2500);
     out.top[p] = __sx.rows(__sx.table('Top Packages'));
