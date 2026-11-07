@@ -143,7 +143,7 @@ export async function events(store, prev, seeds) {
 }
 
 // ---------------------------------------------------------------- аналитика режимов (sbox.watch)
-export async function modes(store, prev, { limit = 60 } = {}) {
+export async function modes(store, prev, { limit = 60, rotate = 300, minUsers = 5 } = {}) {
   const live = store.read('live.json');
   const pk = store.read('packages.json');
   // Кого берём: топ по онлайну/пику (sbox.watch), плюс топ по игрокам за всё время
@@ -151,10 +151,16 @@ export async function modes(store, prev, { limit = 60 } = {}) {
   live?.watchTop?.rows?.slice(0, 40).forEach(r => ids.add(r[0]));
   live?.topNow?.rows?.slice(0, 20).forEach(r => ids.add(r[0]));
   if (pk?.games) [...pk.games.rows].sort((a, b) => b[6] - a[6]).slice(0, 20).forEach(r => ids.add(r[0]));
-  const list = [...ids].filter(Boolean).slice(0, limit);
+  const top = [...ids].filter(Boolean).slice(0, limit);
+  // Остальные игры каталога — по кругу, сначала самые давно обновлённые: так история собирается для всех игр, а не только для топа
+  const prevIndex0 = prev?.modes || {};
+  const age = id => (prevIndex0[id]?.generatedAt ? Date.parse(prevIndex0[id].generatedAt) : 0);
+  const rest = (pk?.games?.rows || []).filter(r => r[0] && !ids.has(r[0]) && (r[6] || 0) >= minUsers).map(r => r[0])
+    .sort((a, b) => age(a) - age(b)).slice(0, rotate);
+  const list = [...top, ...rest];
   const index = {};
   let ok = 0;
-  await pool(list, 3, async ident => {
+  await pool(list, 4, async ident => {
     const a = await http(`${WATCH}/api/analytics/packages/game/${ident}`, { timeout: 45000 });
     const an = a.analytics || {};
     const ser = an.playerHistory?.series || {};
@@ -174,7 +180,7 @@ export async function modes(store, prev, { limit = 60 } = {}) {
     store.write(`modes/${ident}.json`, out);
     index[ident] = { title: out.title, playersNow: out.playersNow, peak24h: out.peak24h, generatedAt: out.generatedAt };
     ok++;
-    await sleep(300);
+    await sleep(150);
   });
   const prevIndex = prev?.modes || {};
   return { generatedAt: nowIso(), modes: { ...prevIndex, ...index }, updated: ok };
