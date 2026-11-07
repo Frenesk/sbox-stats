@@ -14,7 +14,7 @@ async function openAndRun(ctx, url, readyExpr, script, timeout = 60000) {
     for (;;) {
       await page.evaluate(HELPERS);
       if (await page.evaluate(`(()=>{try{return !!(${readyExpr})}catch(e){return false}})()`)) break;
-      if (Date.now() - t0 > timeout) throw new Error('страница не загрузилась: ' + url);
+      if (Date.now() - t0 > timeout) throw new Error('page did not load: ' + url);
       await sleep(700);
     }
     await sleep(1500);
@@ -49,7 +49,7 @@ export async function sboxgame(store, prev, { skinPagesLimit = 60 } = {}) {
       }
       const daily = {};
       (f.daily || []).forEach(s => (s.data || []).forEach(p => { (daily[day(p[0])] = daily[day(p[0])] || {})[s.name] = Math.round(p[1] * 100) / 100; }));
-      if (!monthly.length) throw new Error('пустой баланс');
+      if (!monthly.length) throw new Error('empty finance table');
       out.finance = { monthly: monthly.sort((a, b) => (a.month < b.month ? -1 : 1)), daily };
     } catch (e) { out.errors.push('finance: ' + e.message); out.finance = prev?.finance; }
 
@@ -60,7 +60,7 @@ export async function sboxgame(store, prev, { skinPagesLimit = 60 } = {}) {
       const cols = ['rank', 'ident', 'title', 'users', 'usd'];
       const periods = {};
       for (const [p, rows] of Object.entries(pf.top || {})) if (rows && rows.length) periods[p] = table(cols, conv(rows));
-      if (!periods.All) throw new Error('пустая таблица Play Fund');
+      if (!periods.All) throw new Error('empty Play Fund table');
       // История снимков: по ней игра строит доход в день (скользящее среднее за 7 дней) — сайт не даёт дневных данных по играм.
       const today = day(Date.now());
       const history = { ...(prev?.playfund?.history || {}) };

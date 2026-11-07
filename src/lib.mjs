@@ -25,10 +25,10 @@ export async function http(url, { json = true, timeout = 30000, retries = 3, hea
       }
       const text = await r.text();
       if (!json) return text;
-      try { return JSON.parse(text); } catch { throw Object.assign(new Error(`не JSON (${text.slice(0, 80)}) ${url}`), { fatal: true }); }
+      try { return JSON.parse(text); } catch { throw Object.assign(new Error(`not JSON (${text.slice(0, 80)}) ${url}`), { fatal: true }); }
     } catch (e) {
       clearTimeout(t);
-      last = e.name === 'AbortError' ? new Error(`таймаут ${url}`) : e;
+      last = e.name === 'AbortError' ? new Error(`timeout ${url}`) : e;
       if (e.fatal) throw last;
       if (i < retries - 1) await sleep((e.status === 429 ? 15000 : 1500) * 2 ** i);
     }

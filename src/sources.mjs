@@ -34,7 +34,7 @@ export async function live(store) {
     out.watchTop = table(['ident', 'title', 'org', 'playersNow', 'peak24h', 'momentum24h', 'weeklyPlaytimeSec', 'totalSec', 'score', 'playFund', 'users24h', 'thumb'],
       items.map(p => [p.ident, p.title, p.org, p.playersNow ?? null, p.playersPeak24h ?? null, p.change24h?.total ?? null,
         p.weeklyPlaytimeSeconds ?? null, p.totalSeconds ?? null, p.score ?? null, p.playFund?.state ?? null, p.usage24h?.users ?? null, thumb(p.thumb)]));
-    if (!items.length) throw new Error('пустой список (формат изменился?) ключи: ' + Object.keys(r).join(','));
+    if (!items.length) throw new Error('empty list (format changed?) keys: ' + Object.keys(r).join(','));
   });
   for (const range of ['24h', '7d']) {
     await tryDo('activity' + range, async () => {
@@ -64,7 +64,7 @@ export async function platform(store, prev) {
   const hourly = (h.Data || []).map(b => [b.Timestamp.slice(0, 13) + ':00Z', ...bucket(b)]);
   const daily = [...dmap.values()].sort((a, b) => (a[0] < b[0] ? -1 : 1));
   // Проверка: история не должна «укорачиваться»
-  if (old.daily.rows.length && daily.length < old.daily.rows.length) throw new Error('история платформы стала короче — оставляем прежнюю');
+  if (old.daily.rows.length && daily.length < old.daily.rows.length) throw new Error('platform history got shorter — keeping the previous one');
 
   // Удержание: релиз, бесплатные выходные и когорта месяц назад
   const retention = {};
@@ -105,7 +105,7 @@ export async function packages() {
     if (!list.length) break;
     all.push(...list); skip += list.length;
   }
-  if (all.length < 100) throw new Error(`слишком мало режимов (${all.length})`);
+  if (all.length < 100) throw new Error(`too few games (${all.length})`);
   return {
     generatedAt: nowIso(), total: all.length,
     games: table(['ident', 'title', 'org', 'created', 'updated', 'tags', 'users', 'sessions', 'seconds', 'playersNow', 'up', 'down', 'favourited', 'thumb'],
@@ -212,7 +212,7 @@ export async function skins(store, prev) {
   for (let page = 0; page < 30 && items.length < total; page++) {
     const r = await http(`https://sbox.dev/skins/__data.json?page=${page}`, { timeout: 45000 });
     const node = (r.nodes || []).find(n => n && n.type === 'data' && n.data && n.data[0] && n.data[0].skins !== undefined);
-    if (!node) throw new Error('формат sbox.dev изменился');
+    if (!node) throw new Error('sbox.dev format changed');
     const root = devalue(node.data, 0);
     total = root.meta?.totalItems ?? items.length;
     const list = root.skins || [];
@@ -221,7 +221,7 @@ export async function skins(store, prev) {
     if (root.meta?.lastPage) break;
     await sleep(500);
   }
-  if (items.length < 50) throw new Error(`мало скинов (${items.length})`);
+  if (items.length < 50) throw new Error(`too few skins (${items.length})`);
   // Накопление истории цен по дням (sbox.dev отдаёт текущую цену; историю храним сами, 365 дней)
   const hist = prev?.priceHistory || {};
   const today = day(Date.now());
@@ -254,7 +254,7 @@ export async function market(store, prev) {
     items.push(...list); start += list.length;
     await sleep(2500);
   }
-  if (!items.length) throw new Error('рынок пуст');
+  if (!items.length) throw new Error('market is empty');
   const hist = prev?.history || {};
   const today = day(Date.now());
   for (const i of items) {
@@ -277,7 +277,7 @@ export { devalue, money };
 // Один файл на скин: skins/{id}.json. За запуск обновляется часть скинов (самые давно обновлённые), полный круг ~6 ч.
 export async function skincards(store, prev, { perRun = 130 } = {}) {
   const sk = store.read('skins.json');
-  if (!sk?.skins?.rows?.length) throw new Error('нет skins.json');
+  if (!sk?.skins?.rows?.length) throw new Error('no skins.json');
   const c = Object.fromEntries(sk.skins.cols.map((k, i) => [k, i]));
   const list = sk.skins.rows.map(r => ({ slug: r[c.slug], id: r[c.id], name: r[c.name] })).filter(x => x.slug && x.id);
   const index = { ...(prev?.skins || {}) };
@@ -318,6 +318,6 @@ export async function skincards(store, prev, { perRun = 130 } = {}) {
     } catch (e) { errors.push(`${s.slug}: ${e.message}`); }
     await sleep(250);
   });
-  if (todo.length && errors.length === todo.length) throw new Error('все запросы к sbox.dev неудачны: ' + errors[0]);
+  if (todo.length && errors.length === todo.length) throw new Error('all sbox.dev requests failed: ' + errors[0]);
   return { generatedAt: nowIso(), skins: index, errors: errors.slice(0, 20) };
 }

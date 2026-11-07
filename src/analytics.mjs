@@ -19,7 +19,7 @@ function pearson(xs, ys) {
 
 export function analytics(store) {
   const P = store.read('platform.json'), E = store.read('events.json'), L = store.read('live.json'), S = store.read('sboxgame.json'), K = store.read('skins.json'), PK = store.read('packages.json');
-  if (!P) throw new Error('нет истории платформы');
+  if (!P) throw new Error('no platform history');
   const today = day(Date.now());
   const C = P.daily.cols, rows = P.daily.rows.filter(r => r[0] < today);
   const col = n => C.indexOf(n);
