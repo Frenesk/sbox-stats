@@ -266,3 +266,52 @@ export async function market(store, prev) {
 }
 
 export { devalue, money };
+
+// ---------------------------------------------------------------- карточки скинов (sbox.dev API): цены, продажи на рынке Steam, стакан, владельцы
+// Один файл на скин: skins/{id}.json. За запуск обновляется часть скинов (самые давно обновлённые), полный круг ~6 ч.
+export async function skincards(store, prev, { perRun = 130 } = {}) {
+  const sk = store.read('skins.json');
+  if (!sk?.skins?.rows?.length) throw new Error('нет skins.json');
+  const c = Object.fromEntries(sk.skins.cols.map((k, i) => [k, i]));
+  const list = sk.skins.rows.map(r => ({ slug: r[c.slug], id: r[c.id], name: r[c.name] })).filter(x => x.slug && x.id);
+  const index = { ...(prev?.skins || {}) };
+  const todo = list.sort((a, b) => (index[a.id]?.at ? Date.parse(index[a.id].at) : 0) - (index[b.id]?.at ? Date.parse(index[b.id].at) : 0)).slice(0, perRun);
+  const H = { Origin: 'https://sbox.dev', Referer: 'https://sbox.dev/' };
+  const start = '2024-01-01T00:00:00.000Z', end = new Date().toISOString();
+  const errors = [];
+  await pool(todo, 4, async s => {
+    try {
+      const get = async u => (await http(u, { headers: H, timeout: 30000 }))?.data;
+      const [pr, sa, ob, sup, det] = await Promise.all([
+        get(`https://api.sbox.dev/v2/charts/${s.id}/prices?start=${start}&end=${end}&step=1d`),
+        get(`https://api.sbox.dev/v2/charts/${s.id}/sales?start=${start}&end=${end}&step=1d`),
+        get(`https://api.sbox.dev/v1/skins/${s.slug}/buy-sell-orders`).catch(() => null),
+        get(`https://api.sbox.dev/v1/skins/${s.slug}/supply-sources`).catch(() => null),
+        get(`https://api.sbox.dev/v1/skins/${s.slug}`).catch(() => null)
+      ]);
+      const d = t => String(t).slice(0, 10);
+      const book = arr => (arr || []).slice(0, 25).map(o => [o.price, o.quantity]);
+      const sum = arr => (arr || []).reduce((a, o) => a + (o.quantity || 0), 0);
+      const out = {
+        generatedAt: nowIso(), id: s.id, slug: s.slug, name: s.name,
+        info: det ? { description: det.description, itemType: det.itemType, tradable: det.tradable ? 1 : 0, marketable: det.marketable ? 1 : 0,
+          droppable: det.isDroppableItem ? 1 : 0, permanent: det.isPermanentStoreItem ? 1 : 0, owners: det.uniqueOwners, change24hPct: det.priceChange24hPercent,
+          successfulSales: det.successfulSales, workshopId: det.workshopId, collection: det.collection } : null,
+        // цена: лучшая заявка на продажу (sell) и на покупку (buy) по дням
+        prices: table(['date', 'sell', 'buy'], (pr?.data || []).map(p => [d(p.t), p.s_P ?? null, p.b_P ?? null])),
+        // продажи на рынке Steam: медианная цена и количество за день
+        sales: table(['date', 'median', 'qty'], (sa?.data || []).map(p => [d(p.t), p.p ?? null, p.q ?? 0])),
+        orders: ob ? { updatedAt: ob.lastUpdated, buy: book(ob.buyOrders), sell: book(ob.purchaseableItems), buyQty: sum(ob.buyOrders), sellQty: sum(ob.purchaseableItems),
+          buyAllCost: ob.priceToBuyAllOnMarket, sellAllGet: ob.amountAfterSellAll } : null,
+        supply: sup ? { owners: sup.trackedOwnerCount, trackedQty: sup.trackedQuantity, marketQty: sup.communityMarketQuantity, marketValue: sup.communityMarketValue,
+          topHolders: (sup.topHolders || []).slice(0, 10).map(h => [h.profile?.isRedacted || h.profile?.isPrivate ? null : h.profile?.name, h.quantity, h.inventoryValueSharePercent]) } : null
+      };
+      store.write(`skins/${s.id}.json`, out);
+      const last = out.sales.rows.at(-1);
+      index[s.id] = { slug: s.slug, name: s.name, at: out.generatedAt, priceDays: out.prices.rows.length, salesDays: out.sales.rows.length, lastSale: last ? last[0] : null };
+    } catch (e) { errors.push(`${s.slug}: ${e.message}`); }
+    await sleep(250);
+  });
+  if (todo.length && errors.length === todo.length) throw new Error('все запросы к sbox.dev неудачны: ' + errors[0]);
+  return { generatedAt: nowIso(), skins: index, errors: errors.slice(0, 20) };
+}
