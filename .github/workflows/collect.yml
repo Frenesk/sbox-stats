@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: collect
@@ -25,8 +26,9 @@ concurrency:
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
+      - run: date +%s > /tmp/t0
       - uses: actions/checkout@v4
 
       - name: Прошлые данные (ветка data)
@@ -76,3 +78,17 @@ jobs:
           for f in manifest.json live.json analytics.json; do
             curl -s -m 10 "https://purge.jsdelivr.net/gh/${{ github.repository }}@data/$f" >/dev/null || true
           done
+
+      # Расписание GitHub (cron) для этого репозитория срабатывает ненадёжно, поэтому каждый запуск сам
+      # ставит следующий примерно через 10 минут после своего начала. Группа concurrency держит не больше
+      # одного ожидающего запуска, поэтому цепочки не размножаются.
+      - name: Следующий запуск через ~10 минут
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          T0=$(cat /tmp/t0 2>/dev/null || date +%s)
+          WAIT=$(( 570 - ($(date +%s) - T0) ))
+          if [ $WAIT -gt 0 ]; then sleep $WAIT; fi
+          PENDING=$(gh run list -R ${{ github.repository }} --workflow collect.yml --json status -q '[.[] | select(.status=="queued" or .status=="pending" or .status=="waiting" or .status=="requested")] | length')
+          if [ "${PENDING:-0}" = "0" ]; then gh workflow run collect.yml -R ${{ github.repository }} --ref main; else echo "уже есть ожидающий запуск"; fi
