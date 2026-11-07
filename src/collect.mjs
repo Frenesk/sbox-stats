@@ -22,7 +22,7 @@ const SOURCES = [
   ['skins', 'skins.json', 60, (s, p) => src.skins(s, p)],
   ['modes', 'modes/index.json', 60, (s, p) => src.modes(s, p, { limit: 60 })],
   ['skincards', 'skins/index.json', 180, (s, p) => src.skincards(s, p)],
-  ['market', 'market.json', 180, (s, p) => src.market(s, p)],
+  ['market', 'market.json', 60, (s, p) => src.market(s, p)],
   ['sboxgame', 'sboxgame.json', 180, async (s, p) => (await import('./sboxgame.mjs')).sboxgame(s, p, { skinPagesLimit: 100 })]
 ];
 

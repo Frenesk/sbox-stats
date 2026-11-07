@@ -243,32 +243,24 @@ export async function skins(store, prev) {
 }
 
 // ---------------------------------------------------------------- рынок Steam (запасной/дополнительный источник цен)
+// Торговая площадка Steam. Сам Steam ограничивает частоту запросов (HTTP 429) с серверов GitHub Actions,
+// поэтому цены и число лотов берём из sbox.dev (skins.json): sbox.dev уже отслеживает площадку Steam для каждого скина.
 export async function market(store, prev) {
-  const items = [];
-  let start = 0, total = Infinity;
-  while (start < total && start < 2000) {
-    const r = await http(`https://steamcommunity.com/market/search/render/?appid=${APP}&norender=1&count=100&start=${start}&sort_column=name&sort_dir=asc&l=english&currency=1`, { timeout: 30000, retries: 4 });
-    total = r.total_count || 0;
-    const list = r.results || [];
-    if (!list.length) break;
-    items.push(...list); start += list.length;
-    await sleep(2500);
-  }
+  const sk = store.read('skins.json');
+  if (!sk?.skins?.rows?.length) throw new Error('no skins.json yet');
+  const c = Object.fromEntries(sk.skins.cols.map((k, i) => [k, i]));
+  const items = sk.skins.rows.filter(r => r[c.onMarket] > 0 || r[c.price] != null)
+    .map(r => [r[c.name], r[c.price] ?? null, r[c.onMarket] ?? 0, r[c.icon] ?? null]);
   if (!items.length) throw new Error('market is empty');
   const hist = prev?.history || {};
   const today = day(Date.now());
-  for (const i of items) {
-    const h = (hist[i.hash_name] = hist[i.hash_name] || []);
-    const row = [today, i.sell_price != null ? i.sell_price / 100 : null, i.sell_listings];
+  for (const [name, price, listings] of items) {
+    const h = (hist[name] = hist[name] || []);
+    const row = [today, price, listings];
     if (h.length && h[h.length - 1][0] === today) h[h.length - 1] = row; else h.push(row);
     if (h.length > 365) h.splice(0, h.length - 365);
   }
-  return {
-    generatedAt: nowIso(), total: items.length,
-    items: table(['name', 'price', 'listings', 'icon'], items.map(i => [i.hash_name, i.sell_price != null ? i.sell_price / 100 : null, i.sell_listings,
-      i.asset_description?.icon_url ? 'https://community.fastly.steamstatic.com/economy/image/' + i.asset_description.icon_url + '/96fx96f' : null])),
-    history: hist
-  };
+  return { generatedAt: nowIso(), source: 'sbox.dev', total: items.length, items: table(['name', 'price', 'listings', 'icon'], items), history: hist };
 }
 
 export { devalue, money };
