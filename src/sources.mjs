@@ -59,7 +59,7 @@ export async function platform(store, prev) {
     (r.Data || []).forEach(b => dmap.set(b.Timestamp.slice(0, 10), [b.Timestamp.slice(0, 10), ...bucket(b)]));
     if (to > today) break; from = to;
   }
-  const hFrom = addDays(today, -31);
+  const hFrom = addDays(today, -30);
   const h = await http(`${FP}/stats/platform/history?from=${hFrom}T00:00:00Z&to=${addDays(today, 1)}T00:00:00Z&interval=hour`, { timeout: 60000 });
   const hourly = (h.Data || []).map(b => [b.Timestamp.slice(0, 13) + ':00Z', ...bucket(b)]);
   const daily = [...dmap.values()].sort((a, b) => (a[0] < b[0] ? -1 : 1));
