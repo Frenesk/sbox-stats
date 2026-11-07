@@ -143,7 +143,7 @@ export async function events(store, prev, seeds) {
 }
 
 // ---------------------------------------------------------------- аналитика режимов (sbox.watch)
-export async function modes(store, prev, { limit = 60, rotate = 300, minUsers = 5 } = {}) {
+export async function modes(store, prev, { limit = 60, rotate = 700, minUsers = 5 } = {}) {
   const live = store.read('live.json');
   const pk = store.read('packages.json');
   // Кого берём: топ по онлайну/пику (sbox.watch), плюс топ по игрокам за всё время
